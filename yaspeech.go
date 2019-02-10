@@ -22,12 +22,18 @@ type IAMToken struct {
 	err        error
 	token      string
 	lastUpdate time.Time
-	mutex      sync.Mutex
+	mutex      sync.RWMutex
 	ctx        context.Context
 }
 
-// InitIAMToken initialize
-func InitIAMToken(ctx context.Context, oauth string) {
+// InitIAMToken initialize IAM token.
+func InitIAMToken(oauth string) {
+	token = newIAMToken(nil, oauth)
+}
+
+// InitIAMTokenContext initialize IAM token
+// The token will be updated in the background.
+func InitIAMTokenContext(ctx context.Context, oauth string) {
 	token = newIAMToken(ctx, oauth)
 }
 
@@ -38,18 +44,20 @@ func newIAMToken(ctx context.Context, oauth string) *IAMToken {
 }
 
 func (t *IAMToken) init() {
-	go func() {
-		t.update()
-		ticker := time.NewTicker(time.Minute)
-		for {
-			select {
-			case <-t.ctx.Done():
-				return
-			case <-ticker.C:
-				t.update()
+	if t.ctx != nil {
+		go func() {
+			t.update(true)
+			ticker := time.NewTicker(time.Minute)
+			for {
+				select {
+				case <-t.ctx.Done():
+					return
+				case <-ticker.C:
+					t.update(true)
+				}
 			}
-		}
-	}()
+		}()
+	}
 }
 
 // Get IAM token
@@ -58,18 +66,20 @@ func (t *IAMToken) Get() (string, error) {
 	defer token.mutex.Unlock()
 
 	if t.token == "" {
-		t.update()
+		t.update(false)
 	}
 	return t.token, t.err
 }
 
-func (t *IAMToken) update() {
+func (t *IAMToken) update(lock bool) {
+	if lock {
+		t.mutex.Lock()
+		defer t.mutex.Unlock()
+	}
+
 	if t.token != "" && time.Since(t.lastUpdate) < time.Hour*8 {
 		return
 	}
-
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
 
 	token, err := t.requestToken()
 	if err != nil && t.token != "" && time.Since(t.lastUpdate) < (time.Hour*11+time.Minute*50) {
