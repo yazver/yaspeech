@@ -1,0 +1,13 @@
+*.exe
+*.exe~
+*.test
+*~
+.git/
+.settings/
+.idea/
+.vscode/
+bin/
+debug
+
+examples/simple/config.json
+examples/simple/config.yaml
