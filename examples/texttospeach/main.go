@@ -26,5 +26,4 @@ func main() {
 	if err := ioutil.WriteFile("audio.ogg", audio, 0644); err != nil {
 		return
 	}
-
 }
