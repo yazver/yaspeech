@@ -46,7 +46,7 @@ func (tts *TextToSpeech) Synthesize(text string) ([]byte, error) {
 		return nil, err
 	}
 
-	data := url.Values{
+	options := url.Values{
 		"text":            {text},
 		"voice":           {string(tts.Voice)},
 		"emotion":         {string(tts.Emotion)},
@@ -56,7 +56,7 @@ func (tts *TextToSpeech) Synthesize(text string) ([]byte, error) {
 		"lang":            {string(tts.Lang)},
 		"sampleRateHertz": {strconv.FormatInt(int64(tts.SampleRate), 10)},
 	}
-	req, err := http.NewRequest("POST", "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize", strings.NewReader(data.Encode()))
+	req, err := http.NewRequest("POST", "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize", strings.NewReader(options.Encode()))
 	if err != nil {
 		return nil, err
 	}

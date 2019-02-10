@@ -100,7 +100,7 @@ func (t *IAMToken) requestToken() (string, error) {
 
 	if resp.StatusCode != 200 {
 		var errorInfo struct {
-			Code    string `json:"code"`
+			Code    int    `json:"code"`
 			Message string `json:"message"`
 		}
 		err := json.Unmarshal(data, &errorInfo)

@@ -1,6 +1,8 @@
 package yaspeech
 
 import (
+	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"math"
@@ -35,13 +37,13 @@ func NewSpeechToText(folderID string) *SpeechToText {
 }
 
 // Recognize convert text to speech
-func (stt *SpeechToText) Recognize(r io.Reader) ([]byte, error) {
+func (stt *SpeechToText) Recognize(r io.Reader) (string, error) {
 	iamtoken, err := token.Get()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	data := url.Values{
+	options := url.Values{
 		"topic":           {string(stt.Topic)},
 		"profanityFilter": {strconv.FormatBool(stt.ProfanityFilter)},
 		"folderId":        {stt.FolderID},
@@ -50,25 +52,33 @@ func (stt *SpeechToText) Recognize(r io.Reader) ([]byte, error) {
 		"lang":            {string(stt.Lang)},
 		"sampleRateHertz": {strconv.FormatInt(int64(stt.SampleRate), 10)},
 	}
-	req, err := http.NewRequest("POST", "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize/?"+data.Encode(), r)
+	req, err := http.NewRequest("POST", "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize/?"+options.Encode(), r)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	req.Header.Add("Authorization", "Bearer "+iamtoken)
 	req.Header.Add("Transfer-Encoding", "chunked")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	err = checkResponse(resp)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+
 	defer resp.Body.Close()
-	audio, err := ioutil.ReadAll(resp.Body)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return audio, nil
+	var result struct {
+		Result string `json:"result"`
+	}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return "", errors.New("Unable to unmarshal respose: " + err.Error())
+	}
+	return result.Result, nil
 }
