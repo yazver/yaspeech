@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/yazver/yaspeech/auth"
+
 	"github.com/yazver/yaspeech"
 )
 
@@ -13,9 +15,9 @@ func main() {
 
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()
-	// yaspeech.InitIAMTokenContext(ctx, oauth)
-	yaspeech.InitIAMToken(oauth)
-	stt := yaspeech.NewSpeechToText(folderID)
+	// token := auth.NewIAMTokenContext(ctx, &auth.YandexAccount{OAuth: oauth})
+	token := auth.NewIAMToken(&auth.YandexAccount{OAuth: oauth})
+	stt := yaspeech.NewSpeechToText(folderID, token)
 
 	file, err := os.Open("audio.ogg")
 	if err != nil {

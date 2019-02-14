@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/yazver/yaspeech/auth"
+
 	"github.com/yazver/yaspeech"
 )
 
@@ -15,8 +17,9 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	yaspeech.InitIAMTokenContext(ctx, oauth)
-	tts := yaspeech.NewTextToSpeech(folderID)
+	//yaspeech.InitIAMTokenContext(ctx, oauth)
+	token := auth.NewIAMTokenContext(ctx, &auth.YandexAccount{OAuth: oauth})
+	tts := yaspeech.NewTextToSpeech(folderID, token)
 
 	audio, err := tts.Synthesize("Съешь ещё этих мягких французских булок, да выпей же чаю.")
 	if err != nil {

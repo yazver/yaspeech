@@ -9,13 +9,17 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/yazver/yaspeech/auth"
 )
 
 // SpeechToText is
 type SpeechToText struct {
+	FolderID string
+	Token    *auth.IAMToken
+
 	ProfanityFilter bool
 	Topic           Topic
-	FolderID        string
 	Format          Format
 	Lang            Language
 	SampleRate      SampleRateHertz
@@ -23,7 +27,7 @@ type SpeechToText struct {
 }
 
 // NewSpeechToText create and initializes SpeechToText
-func NewSpeechToText(folderID string) *SpeechToText {
+func NewSpeechToText(folderID string, token *auth.IAMToken) *SpeechToText {
 	stt := &SpeechToText{
 		ProfanityFilter: false,
 		Topic:           TopicGeneral,
@@ -32,13 +36,14 @@ func NewSpeechToText(folderID string) *SpeechToText {
 		SampleRate:      SampleRate48000,
 		Speed:           1.0,
 		FolderID:        folderID,
+		Token:           token,
 	}
 	return stt
 }
 
 // Recognize convert text to speech
 func (stt *SpeechToText) Recognize(r io.Reader) (string, error) {
-	iamtoken, err := token.Get()
+	iamtoken, err := stt.Token.Get()
 	if err != nil {
 		return "", err
 	}

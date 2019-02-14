@@ -8,7 +8,7 @@ import (
 )
 
 func checkResponse(resp *http.Response) error {
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		var errorInfo struct {
 			ErrorCode    string `json:"error_code"`
 			ErrorMessage string `json:"error_message"`

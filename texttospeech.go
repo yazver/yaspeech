@@ -8,13 +8,17 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/yazver/yaspeech/auth"
 )
 
 // TextToSpeech is
 type TextToSpeech struct {
+	FolderID string
+	Token    *auth.IAMToken
+
 	Voice      Voice
 	Emotion    Emotion
-	FolderID   string
 	Format     Format
 	Lang       Language
 	SampleRate SampleRateHertz
@@ -22,7 +26,7 @@ type TextToSpeech struct {
 }
 
 // NewTextToSpeech create and initializes TextToSpeech
-func NewTextToSpeech(folderID string) *TextToSpeech {
+func NewTextToSpeech(folderID string, token *auth.IAMToken) *TextToSpeech {
 	tts := &TextToSpeech{
 		Voice:      VoiceAlyss,
 		Emotion:    EmotionNeutral,
@@ -31,6 +35,7 @@ func NewTextToSpeech(folderID string) *TextToSpeech {
 		SampleRate: SampleRate48000,
 		Speed:      1.0,
 		FolderID:   folderID,
+		Token:      token,
 	}
 	return tts
 }
@@ -41,7 +46,7 @@ func (tts *TextToSpeech) Synthesize(text string) ([]byte, error) {
 		return nil, errors.New("Text must be not empty")
 	}
 
-	iamtoken, err := token.Get()
+	iamtoken, err := tts.Token.Get()
 	if err != nil {
 		return nil, err
 	}
